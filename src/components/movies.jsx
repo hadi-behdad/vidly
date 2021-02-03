@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { getMovies } from "../services/fakeMovieService";
+import Like from "./common/like";
 
 const Movies = (props) => {
   const [movies, setMovies] = useState(getMovies());
@@ -15,6 +16,16 @@ const Movies = (props) => {
     console.log(mainMovies);
     setMovies(newMovies);
   };
+
+  const handleLike = (id) => {
+    // const likeValue = movies[id].liked === true ? false : true;
+    const tempMovies = [...movies];
+    tempMovies[id] = { ...movies[id] };
+    tempMovies[id].liked = !tempMovies[id].liked;
+
+    setMovies(tempMovies);
+  };
+
   if (movies.length === 0) return <p>There are no Movies in the database</p>;
 
   return (
@@ -28,6 +39,7 @@ const Movies = (props) => {
             <th scope="col">Stock</th>
             <th scope="col">Rate</th>
             <th scope="col"></th>
+            <th scope="col"></th>
           </tr>
         </thead>
         <tbody>
@@ -37,6 +49,13 @@ const Movies = (props) => {
               <td>{movie.genre.name}</td>
               <td>{movie.numberInStock}</td>
               <td>{movie.dailyRentalRate}</td>
+              <td>
+                <Like
+                  onLike={() => handleLike(index)}
+                  liked={movie.liked}
+                  id={index}
+                ></Like>
+              </td>
               <td>
                 <button
                   onClick={() => handleClick(movie)}
