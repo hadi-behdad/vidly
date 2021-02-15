@@ -1,74 +1,101 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
+import _ from "lodash";
+import Pagination from "./common/pagination";
+import SideBar from "./common/sidebar";
 import { getMovies } from "../services/fakeMovieService";
-import Like from "./common/like";
+import { getGenres } from "../services/fakeGenreService";
+import MoviesTable from "./moviesTable";
 
 const Movies = (props) => {
+  const allGenres = "All Genres";
   const [movies, setMovies] = useState(getMovies());
-  const [mainMovies, setMainMovies] = useState([]);
 
-  useEffect(() => {
-    setMainMovies([...movies]);
-  }, []);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [selectedGenre, setSelectedGenre] = useState({ name: allGenres });
 
-  const handleClick = (movie) => {
+  const [sortColumn, setSortColumn] = useState({ path: "title", order: "asc" });
+
+  let currentPageMovies = [];
+  const genres = [{ name: allGenres }, ...getGenres()];
+  const pageSize = 4;
+
+  const handleSort = (sortColumn) => {
+    setSortColumn(sortColumn);
+  };
+
+  const handleDelete = (movie) => {
     const newMovies = movies.filter((m) => m._id !== movie._id);
-    console.log(movies);
-    console.log(mainMovies);
     setMovies(newMovies);
   };
 
   const handleLike = (id) => {
-    // const likeValue = movies[id].liked === true ? false : true;
     const tempMovies = [...movies];
-    tempMovies[id] = { ...movies[id] };
-    tempMovies[id].liked = !tempMovies[id].liked;
+    const currentIndex = movies.findIndex((obj) => obj._id === id);
+    tempMovies[currentIndex] = { ...movies[currentIndex] };
+    tempMovies[currentIndex].liked = !tempMovies[currentIndex].liked;
 
     setMovies(tempMovies);
   };
 
-  if (movies.length === 0) return <p>There are no Movies in the database</p>;
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
+
+  const handleGenreSelect = (genre) => {
+    setSelectedGenre(genre);
+    setCurrentPage(1);
+  };
+
+  if ((currentPage - 1) * pageSize === movies.length)
+    setCurrentPage(currentPage - 1);
+
+  const filteredBasedOnGenre = [
+    ...movies.filter((m) => {
+      if (selectedGenre.name !== allGenres)
+        return m.genre.name === selectedGenre.name;
+      else return m.genre.name;
+    }),
+  ];
+
+  const sortedMovies = [
+    ..._.orderBy(filteredBasedOnGenre, sortColumn.path, sortColumn.order),
+  ];
+
+  currentPageMovies = _.slice(
+    sortedMovies,
+    (currentPage - 1) * pageSize,
+    pageSize * currentPage
+  );
+
+  if (filteredBasedOnGenre.length === 0)
+    return <p>There are no Movies in the database</p>;
 
   return (
-    <React.Fragment>
-      <p>Showing {movies.length} movies in the database</p>
-      <table className="table">
-        <thead>
-          <tr>
-            <th scope="col">Title</th>
-            <th scope="col">Genre</th>
-            <th scope="col">Stock</th>
-            <th scope="col">Rate</th>
-            <th scope="col"></th>
-            <th scope="col"></th>
-          </tr>
-        </thead>
-        <tbody>
-          {movies.map((movie, index) => (
-            <tr key={index}>
-              <td>{movie.title}</td>
-              <td>{movie.genre.name}</td>
-              <td>{movie.numberInStock}</td>
-              <td>{movie.dailyRentalRate}</td>
-              <td>
-                <Like
-                  onLike={() => handleLike(index)}
-                  liked={movie.liked}
-                  id={index}
-                ></Like>
-              </td>
-              <td>
-                <button
-                  onClick={() => handleClick(movie)}
-                  className="btn btn-danger btn-sm"
-                >
-                  Delete
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </React.Fragment>
+    <div className="row">
+      <div className="col-3">
+        <SideBar
+          items={genres}
+          selectedItem={selectedGenre.name}
+          onItemSelect={handleGenreSelect}
+        ></SideBar>
+      </div>
+      <div className="col">
+        <p>Showing {filteredBasedOnGenre.length} movies in the database</p>
+        <MoviesTable
+          movies={currentPageMovies}
+          sortColumn={sortColumn}
+          onLike={handleLike}
+          onDelete={handleDelete}
+          onSort={handleSort}
+        ></MoviesTable>
+        <Pagination
+          pageSize={pageSize}
+          itemsCount={filteredBasedOnGenre.length}
+          onPageChange={handlePageChange}
+          currentPage={currentPage}
+        ></Pagination>
+      </div>
+    </div>
   );
 };
 
