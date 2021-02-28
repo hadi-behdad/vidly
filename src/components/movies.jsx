@@ -7,6 +7,7 @@ import { getGenres } from "../services/fakeGenreService";
 import MoviesTable from "./moviesTable";
 
 const Movies = (props) => {
+  const { paginationBaseUrl } = props;
   const allGenres = "All Genres";
   const [movies, setMovies] = useState(getMovies());
 
@@ -71,29 +72,32 @@ const Movies = (props) => {
     return <p>There are no Movies in the database</p>;
 
   return (
-    <div className="row">
-      <div className="col-3">
-        <SideBar
-          items={genres}
-          selectedItem={selectedGenre.name}
-          onItemSelect={handleGenreSelect}
-        ></SideBar>
-      </div>
-      <div className="col">
-        <p>Showing {filteredBasedOnGenre.length} movies in the database</p>
-        <MoviesTable
-          movies={currentPageMovies}
-          sortColumn={sortColumn}
-          onLike={handleLike}
-          onDelete={handleDelete}
-          onSort={handleSort}
-        ></MoviesTable>
-        <Pagination
-          pageSize={pageSize}
-          itemsCount={filteredBasedOnGenre.length}
-          onPageChange={handlePageChange}
-          currentPage={currentPage}
-        ></Pagination>
+    <div>
+      <div className="row">
+        <div className="col-3">
+          <SideBar
+            items={genres}
+            selectedItem={selectedGenre.name}
+            onItemSelect={handleGenreSelect}
+          ></SideBar>
+        </div>
+        <div className="col">
+          <p>Showing {filteredBasedOnGenre.length} movies in the database</p>
+          <MoviesTable
+            movies={currentPageMovies}
+            sortColumn={sortColumn}
+            onLike={handleLike}
+            onDelete={handleDelete}
+            onSort={handleSort}
+          ></MoviesTable>
+          <Pagination
+            pageSize={pageSize}
+            itemsCount={filteredBasedOnGenre.length}
+            onPageChange={handlePageChange}
+            currentPage={currentPage}
+            paginationBaseUrl={paginationBaseUrl}
+          ></Pagination>
+        </div>
       </div>
     </div>
   );
